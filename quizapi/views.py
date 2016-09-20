@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from rest_framework.decorators import api_view, detail_route
+from rest_framework.decorators import detail_route
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from quizapi.serializers import UserAnswerSerializer
+from quizapi.serializers import UserAnswerSerializer, TaskSerializer
 from .models import Test, Subject, PossibleAnswer, UserAnswer, Task
 from . import serializers
+
+
+NOT_FOUND_RESP = {'detail': 'Not found'}
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -28,14 +30,25 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'tests': answers})
 
 
-class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
-    serializer_class = serializers.GroupSerializer
-
-
 class TestViewSet(viewsets.ModelViewSet):
     queryset = Test.objects.all()
     serializer_class = serializers.TestSerializer
+
+    @detail_route(methods=['get'])
+    def get_tasks(self, request, pk):
+
+        try:
+            test = Test.objects.get(pk=pk)
+        except Task.DoesNotExist:
+            return Response(NOT_FOUND_RESP)
+
+        tasks = [TaskSerializer(t).data for t in test.tasks.all()]
+        return Response({'count': len(tasks), 'tasks': tasks})
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = serializers.GroupSerializer
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
@@ -56,4 +69,3 @@ class UserAnswerViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = serializers.TaskSerializer
-

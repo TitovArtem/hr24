@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 class Subject(models.Model):
     """ The subject of the test. """
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return '<Subject: %s>' % self.title
@@ -38,6 +38,9 @@ class PossibleAnswer(models.Model):
     task = models.ForeignKey(Task, related_name='possible_answers')
     is_true = models.BooleanField(default=False, help_text='correct answer')
 
+    def __str__(self):
+        return '<PossibleAnswer: id %d>' % self.pk
+
 
 class Test(models.Model):
     """ The test with list of tasks. """
@@ -45,6 +48,29 @@ class Test(models.Model):
     subject = models.ForeignKey(Subject, related_name='test',
                                 blank=True, null=True)
     tasks = models.ManyToManyField(Task, related_name='tests')
+
+    def __str__(self):
+        return '<Test: %s>' % self.title
+
+
+class TestSession(models.Model):
+    """
+    The session of test. It contains the start and finish
+    date times for each test of each user
+    """
+    test = models.ForeignKey(Test, related_name='test_session')
+    user = models.ForeignKey(User, related_name='test_session')
+    start_datetime = models.DateTimeField(auto_now_add=True,
+                                          help_text='session start datetime')
+    finish_datetime = models.DateTimeField(auto_now_add=True,
+                                           blank=True,
+                                           null=True,
+                                           help_text='session finish datetime')
+
+    def __str__(self):
+        return '<TestSession: [Test #%d] from %s to %s by %s>' % \
+               (self.test.title, self.start_datetime,
+                self.finish_datetime, self.user.name)
 
 
 class UserAnswer(models.Model):
@@ -54,4 +80,5 @@ class UserAnswer(models.Model):
     test = models.ManyToManyField(Test, related_name='user_answers')
     answers = models.ManyToManyField(PossibleAnswer,
                                      related_name='user_answers')
-    time_of_answer = models.DateTimeField(auto_now=True)
+    answered_datetime = models.DateTimeField(
+        auto_now=True, help_text='datetime when user answered')

@@ -16,14 +16,19 @@ Including another URLconf
 from django.conf.urls import url, include
 from rest_framework import routers
 from quizapi import views
-
+#from quizapi.views import TaskList
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
+router.register(r'tests', views.TestViewSet)
+router.register(r'subjects', views.SubjectViewSet)
+router.register(r'tasks', views.TaskViewSet)
+router.register(r'answers', views.PossibleAnswerViewSet)
 
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^api-quiz/', include('rest_framework.urls', namespace='rest_framework'))
+    url(r'^api-quiz/', include('rest_framework.urls',
+                               namespace='rest_framework')),
 ]

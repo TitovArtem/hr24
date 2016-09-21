@@ -75,23 +75,25 @@ class TestSession(models.Model):
     user = models.ForeignKey(User, related_name='test_session')
     start_datetime = models.DateTimeField(auto_now_add=True,
                                           help_text='session start datetime')
-    finish_datetime = models.DateTimeField(auto_now_add=True,
+    finish_datetime = models.DateTimeField(default=None,
                                            blank=True,
                                            null=True,
                                            help_text='session finish datetime')
 
     def __str__(self):
-        return '<TestSession: [Test #%d] from %s to %s by %s>' % \
+        return '<TestSession: [Test #%s] from %s to %s by %s>' % \
                (self.test.title, self.start_datetime,
-                self.finish_datetime, self.user.name)
+                self.finish_datetime, self.user.username)
 
 
 class UserAnswer(models.Model):
     """ The answer of user. """
     user = models.ForeignKey(User, related_name='user_answers')
     task = models.ForeignKey(Task, related_name='user_answers')
-    test = models.ManyToManyField(Test, related_name='user_answers')
+    test_session = models.ForeignKey(TestSession, related_name='user_answers')
     answers = models.ManyToManyField(PossibleAnswer,
-                                     related_name='user_answers')
+                                     related_name='user_answers',
+                                     null=True,
+                                     blank=True)
     answered_datetime = models.DateTimeField(
         auto_now=True, help_text='datetime when user answered')

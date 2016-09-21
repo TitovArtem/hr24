@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from . models import Test, Task, Subject, PossibleAnswer, UserAnswer
+from . models import Test, Task, Subject, PossibleAnswer, UserAnswer, \
+    TestSession
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,7 +54,8 @@ class UserAnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAnswer
-        fields = ('id', 'user', 'test', 'task', 'answers', 'time_of_answer')
+        fields = ('id', 'user', 'test_session', 'task',
+                  'answers', 'answered_datetime')
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -72,3 +74,16 @@ class TestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Test
         fields = ('id', 'title', 'subject', 'tasks')
+
+
+class TestSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestSession
+        fields = ('id', 'test', 'user', 'start_datetime', 'finish_datetime')
+
+
+class TestSessionStatsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TestSession
+        fields = ('id', 'test', 'user', 'start_datetime', 'finish_datetime')

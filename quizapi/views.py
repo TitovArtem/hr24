@@ -3,7 +3,7 @@ import datetime
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, api_view
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.response import Response
 
 from .permissions import UserPermission
@@ -192,6 +192,10 @@ class AdminPermissionsViewSet(viewsets.ModelViewSet):
 class UserViewSet(AdminPermissionsViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
+
+    def get_permissions(self):
+        return (AllowAny() if self.request.method == 'POST'
+                else IsAdminUser()),
 
 
 class GroupViewSet(AdminPermissionsViewSet):

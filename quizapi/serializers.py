@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
+
+from .utils import queries
 from . models import Test, Task, Subject, PossibleAnswer, UserAnswer, \
     TestSession
 
@@ -8,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'groups', 'password')
+                  'groups')
         write_only_fields = ('password',)
         read_only_fields = ('id',)
 
@@ -58,7 +60,7 @@ class UserAnswerSerializer(serializers.ModelSerializer):
                   'answers', 'answered_datetime')
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class TaskDetailSerializer(serializers.ModelSerializer):
     possible_answers = PossibleAnswerSerializer(many=True, read_only=True)
 
     class Meta:
@@ -67,13 +69,28 @@ class TaskSerializer(serializers.ModelSerializer):
                   'possible_answers')
 
 
-class TestSerializer(serializers.ModelSerializer):
-    tasks = TaskSerializer(many=True, read_only=True)
+class TaskSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Task
+        fields = ('id', 'number', 'question', 'question_type')
+
+
+class TestDetailSerializer(serializers.ModelSerializer):
+    tasks = TaskDetailSerializer(many=True, read_only=True)
     subject = SubjectSerializer()
 
     class Meta:
         model = Test
         fields = ('id', 'title', 'subject', 'tasks')
+
+
+class TestSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer()
+
+    class Meta:
+        model = Test
+        fields = ('id', 'title', 'subject')
 
 
 class TestSessionSerializer(serializers.ModelSerializer):
@@ -83,7 +100,13 @@ class TestSessionSerializer(serializers.ModelSerializer):
 
 
 class TestSessionStatsSerializer(serializers.ModelSerializer):
+    test_stats = serializers.SerializerMethodField('get_stats')
 
     class Meta:
         model = TestSession
-        fields = ('id', 'test', 'user', 'start_datetime', 'finish_datetime')
+        fields = ('id', 'test', 'user', 'start_datetime',
+                  'finish_datetime', 'test_stats')
+
+    def get_stats(self, obj):
+        return {'tasks_count': queries.count_tasks(obj.test_id),
+                'correct_answers': queries.count_correct_answers(obj.pk)}

@@ -55,5 +55,30 @@ def count_tasks(test_id):
 
 def is_test_completed(user_id, test_session_id):
     test_id = TestSession.objects.get(pk=test_session_id).test_id
-    print(count_answered_tasks(user_id, test_session_id), count_tasks(test_id))
     return count_tasks(test_id) == count_answered_tasks(user_id, test_session_id)
+
+
+def is_correct_answer(task, user_answer):
+    answers = task.possible_answers.filter(is_true=True)
+    user_answers = user_answer.answers.all()
+    if answers.count() != user_answers.count():
+        return False
+    print(user_answers, answers)
+    print(set(user_answers).difference(answers))
+    return set(user_answers).difference(answers)
+
+
+def count_correct_answers(test_session_id):
+    test_session = TestSession.objects.get(pk=test_session_id)
+    user_answers = test_session.user_answers.all()
+    tasks = test_session.test.tasks.all()
+
+    correct_answers = 0
+    for task in tasks:
+        answer = user_answers.filter(task_id=task.pk)
+        if answer.count() == 0:
+            continue
+        if is_correct_answer(task, answer.first()):
+            correct_answers += 1
+
+    return correct_answers

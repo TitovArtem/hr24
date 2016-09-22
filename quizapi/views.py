@@ -3,7 +3,7 @@ import datetime
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, api_view
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .permissions import UserPermission
@@ -45,7 +45,7 @@ class TestViewSet(UserPermissionsViewSet):
             serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(methods=['POST'])
+    @detail_route(methods=['POST'], permission_classes=(IsAuthenticated,))
     def start_test(self, request, pk=None):
         """ Starts test session for the given test. """
         try:
@@ -62,6 +62,7 @@ class TestViewSet(UserPermissionsViewSet):
 
 
 class NestedTestSessionStatsViewSet(UserPermissionsViewSet):
+    """ Stats for tests sessions. """
     queryset = TestSession.objects.all()
     serializer_class = serializers.TestSessionStatsSerializer
 
@@ -84,6 +85,7 @@ class NestedTestSessionStatsViewSet(UserPermissionsViewSet):
 
 
 class NestedTaskViewSet(UserPermissionsViewSet):
+    """ Tasks for tests. """
     serializer_class = serializers.TaskDetailSerializer
     queryset = Task.objects.all()
 
@@ -110,7 +112,8 @@ class NestedTaskViewSet(UserPermissionsViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        if not queries.is_started_test_session(request.user.id, instance.pk):
+        if not queries.is_started_test_session(request.user.id,
+                                               kwargs['test_pk']):
             if not request.user.is_staff:
                 return responses.response_400(
                     'Permission denied. There are not started sessions.')
@@ -131,12 +134,16 @@ class NestedTaskViewSet(UserPermissionsViewSet):
             vars.append(answer)
         return vars
 
-    @detail_route(methods=['POST'])
+    @detail_route(methods=['POST'], permission_classes=(IsAuthenticated,))
     def answer(self, request, test_pk=None, pk=None):
+        """
+        Answers to the given task for the given test. It closes test session
+        after the answer to the last task.
+        """
         try:
             test = Test.objects.get(pk=test_pk)
             answers = test.tasks.get(pk=pk).possible_answers.all()
-        except Test.DoesNotExists:
+        except (Test.DoesNotExist, Task.DoesNotExist):
             return responses.response_404()
 
         test_session = queries.get_current_test_session(
@@ -170,7 +177,6 @@ class NestedTaskViewSet(UserPermissionsViewSet):
         for v in vars:
             user_answer.answers.add(v)
 
-        print(test_session.pk)
         if queries.is_test_completed(request.user.id, test_session.pk):
             test_session.finish_datetime = datetime.datetime.now()
             test_session.save()

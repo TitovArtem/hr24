@@ -39,9 +39,22 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'social.apps.django_app.default',
     'quizapi',
 ]
 
+# Authentication backends for python-social-auth
+AUTHENTICATION_BACKENDS = (
+    'social.backends.vk.VKOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# vk.com OAuth configs
+SOCIAL_AUTH_VK_APP_KEY = 'YOUR_APP_ID'                 # App's ID
+SOCIAL_AUTH_VK_APP_SECRET = 'YOUR_APP_SECRET_KEY'      # Secret key
+
+
+# Configs for django-rest-framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -76,6 +89,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
             ],
         },
     },

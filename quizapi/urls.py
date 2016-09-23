@@ -25,5 +25,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^', include(tests_router.urls)),
     url(r'^get_token/', auth_views.obtain_auth_token),
-    url(r'^about_me/$', views.about_me)
+    url(r'^about_me/$', views.about_me),
+    url(r'^social_sign_up/$', views.SocialSignUpView.as_view(),
+        name='social_sign_up'),
 ]

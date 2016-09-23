@@ -8,3 +8,11 @@ class UserPermission(permissions.BasePermission):
             return request.user.is_authenticated()
         else:
             return request.user.is_authenticated() and request.user.is_staff
+
+
+class IsAuthenticatedOrCreate(permissions.IsAuthenticated):
+    def has_permission(self, request, view):
+        if request.method == 'POST':
+            return True
+        return super(IsAuthenticatedOrCreate,
+                     self).has_permission(request, view)

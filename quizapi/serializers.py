@@ -1,3 +1,6 @@
+import base64
+
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
@@ -108,3 +111,18 @@ class TestSessionStatsSerializer(serializers.ModelSerializer):
     def get_stats(self, obj):
         return {'tasks_count': queries.count_tasks(obj.test_id),
                 'correct_answers': queries.count_correct_answers(obj.pk)}
+
+
+class SocialSignUpSerializer(UserSerializer):
+    client_id = serializers.SerializerMethodField()
+    client_secret = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('client_id', 'client_secret')
+
+    def get_client_id(self, obj):
+        return obj.application_set.first().client_id
+
+    def get_client_secret(self, obj):
+        return obj.application_set.first().client_secret

@@ -17,4 +17,5 @@ from django.conf.urls import url, include
 
 urlpatterns = [
     url(r'^api/', include('quizapi.urls', namespace='api')),
+    url(r'^', include('social.apps.django_app.urls', namespace='social')),
 ]
